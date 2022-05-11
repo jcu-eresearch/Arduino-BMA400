@@ -20,7 +20,7 @@
   "dependencies": {
     "nigelb/BMA400": "0.0.1"
   },
-  "license": "GPL-3.0",
+  "license": "BSD-3-Clause",
   "build": {
     "libArchive": false,
     "srcFilter": [

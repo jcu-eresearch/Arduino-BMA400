@@ -30,7 +30,28 @@
 
 enum ArduinoBMA400_Status_e
 {
+    ArduinoBMA400_Status_UNKNOWN = 0,
+    ArduinoBMA400_Status_OK = 1,
+    ArduinoBMA400_Status_ERROR = 0b10,
+    ArduinoBMA400_Status_Null_PTR_ERROR = 0b110,
+};
 
+enum ArduinoBMA400_IntStatus_e
+{
+    BMA400IntStatus_WAKEUP = BMA400_ASSERTED_WAKEUP_INT,
+    BMA400IntStatus_ORIENT = BMA400_ASSERTED_ORIENT_CH,
+    BMA400IntStatus_GEN1 = BMA400_ASSERTED_GEN1_INT,
+    BMA400IntStatus_GEN2 = BMA400_ASSERTED_GEN2_INT,
+    BMA400IntStatus_OVERRUN = BMA400_ASSERTED_INT_OVERRUN,
+    BMA400IntStatus_FIFO_FULL = BMA400_ASSERTED_FIFO_FULL_INT,
+    BMA400IntStatus_FIFO_WM = BMA400_ASSERTED_FIFO_WM_INT,
+    BMA400IntStatus_DRDY = BMA400_ASSERTED_DRDY_INT,
+    BMA400IntStatus_STEP = BMA400_ASSERTED_STEP_INT,
+    BMA400IntStatus_S_TAP = BMA400_ASSERTED_S_TAP_INT,
+    BMA400IntStatus_D_TAP = BMA400_ASSERTED_D_TAP_INT,
+    BMA400IntStatus_ACT_CH_X = BMA400_ASSERTED_ACT_CH_X,
+    BMA400IntStatus_ACT_CH_Y = BMA400_ASSERTED_ACT_CH_Y,
+    BMA400IntStatus_ACT_CH_Z = BMA400_ASSERTED_ACT_CH_Z 
 };
 
 class ArduinoBMA400 {
@@ -48,6 +69,10 @@ public:
     void begin();
     void softReset();
     void countSteps(uint32_t &step_count, uint8_t &activity);
+    bool startStepCounting();
+    bool startAccelerometer();
+    u_int32_t readAccelerometer(double &x, double &y, double &z);
+    bool hasIntStatus(ArduinoBMA400_IntStatus_e status);
 };
 
 #endif //ARGOSTAG_ARDUINO_BMA400_H

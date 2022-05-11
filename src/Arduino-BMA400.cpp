@@ -84,7 +84,105 @@ void ArduinoBMA400::softReset()
     bma400_soft_reset(&bma400);
 }
 
+bool ArduinoBMA400::startStepCounting()
+{
+    int8_t rslt = 0;
+    bma400_sensor_conf conf[2];
+    struct bma400_int_enable int_en[2];
+    memset(conf, 0, sizeof(conf));
+    conf[0].type = BMA400_STEP_COUNTER_INT;
+    conf[1].type = BMA400_ACCEL;
+    rslt = bma400_get_sensor_conf(conf, 2, &this->bma400);
+    // bma400_check_rslt("bma400_set_sensor_conf", rslt);
+
+    conf[0].param.step_cnt.int_chan = BMA400_INT_CHANNEL_1;
+
+    conf[1].param.accel.odr = BMA400_ODR_100HZ;
+    conf[1].param.accel.range = BMA400_RANGE_2G;
+    conf[1].param.accel.data_src = BMA400_DATA_SRC_ACCEL_FILT_1;
+
+    /* Set the desired configurations to the sensor */
+    rslt = bma400_set_sensor_conf(conf, 2, &this->bma400);
+    // bma400_check_rslt("bma400_set_sensor_conf", rslt);  
+
+
+    int_en[0].type = BMA400_STEP_COUNTER_INT_EN;
+    int_en[0].conf = BMA400_ENABLE;
+
+    int_en[1].type = BMA400_LATCH_INT_EN;
+    int_en[1].conf = BMA400_ENABLE;
+
+    rslt = bma400_enable_interrupt(int_en, 2, &this->bma400);      
+
+    rslt = bma400_set_power_mode(BMA400_MODE_NORMAL, &this->bma400);
+    return false;
+}
+
+bool ArduinoBMA400::startAccelerometer()
+{
+    uint8_t rslt;
+    bma400_sensor_conf conf;
+    bma400_int_enable int_en;
+    conf.type = BMA400_ACCEL;
+    rslt = bma400_get_sensor_conf(&conf, 1, &this->bma400);
+    conf.param.accel.odr = BMA400_ODR_100HZ;
+    conf.param.accel.range = BMA400_RANGE_2G;
+    conf.param.accel.data_src = BMA400_DATA_SRC_ACCEL_FILT_1;  
+    rslt = bma400_set_sensor_conf(&conf, 1, &this->bma400);
+    rslt = bma400_set_power_mode(BMA400_MODE_NORMAL, &this->bma400); 
+
+    int_en.type = BMA400_DRDY_INT_EN;
+    int_en.conf = BMA400_ENABLE;
+
+    rslt = bma400_enable_interrupt(&int_en, 1, &this->bma400);
+
+}
+
+#define GRAVITY_EARTH     (9.80665f)
+static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width)
+{
+    float accel_ms2;
+    int16_t half_scale;
+
+    half_scale = 1 << (bit_width - 1);
+    accel_ms2 = (GRAVITY_EARTH * accel_data * g_range) / half_scale;
+
+    return accel_ms2;
+
+}
+
+u_int32_t ArduinoBMA400::readAccelerometer(double &x, double &y, double &z)
+{
+    int8_t rslt;
+    bma400_sensor_data data;
+    while(!hasIntStatus(BMA400IntStatus_DRDY)){}
+    rslt = bma400_get_accel_data(BMA400_DATA_SENSOR_TIME, &data, &this->bma400);
+
+    if(rslt == BMA400_OK)
+    {
+            x = lsb_to_ms2(data.x, 2, 12);
+            y = lsb_to_ms2(data.y, 2, 12);
+            z = lsb_to_ms2(data.z, 2, 12);
+    }
+    
+}
+
+bool ArduinoBMA400::hasIntStatus(ArduinoBMA400_IntStatus_e status)
+{
+    int8_t rslt;
+    uint16_t int_status;
+    rslt = bma400_get_interrupt_status(&int_status, &this->bma400);
+    if(rslt != BMA400_OK)
+    {
+        return false;
+    }
+
+    return status && int_status;
+
+}
+
 void ArduinoBMA400::countSteps(uint32_t &step_count, uint8_t &activity)
 {
     bma400_get_steps_counted(&step_count, &activity, &bma400);
 }
+
