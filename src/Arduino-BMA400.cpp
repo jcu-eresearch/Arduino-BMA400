@@ -45,12 +45,7 @@ void ArduinoBMA400::begin()
     bma400.intf_ptr = this;
     rslt = bma400_init(&bma400);
     printf("init result: %i\r\n", rslt);
-    softReset();
-    bma400_int_enable step_int{};
-    step_int.type = BMA400_STEP_COUNTER_INT_EN;
-    step_int.conf = BMA400_ENABLE;
-    bma400_enable_interrupt(&step_int, 1, &bma400);
-    rslt = bma400_set_power_mode(BMA400_MODE_NORMAL, &bma400);
+    // softReset();
 
 
 //    bma400.dev_id = ;
@@ -79,14 +74,14 @@ void ArduinoBMA400::begin()
 //print_rslt(rslt);
 }
 
-void ArduinoBMA400::softReset()
+ArduinoBMA400_Status ArduinoBMA400::softReset()
 {
-    bma400_soft_reset(&bma400);
+    return getStatus(bma400_soft_reset(&bma400));
 }
 
-bool ArduinoBMA400::startStepCounting()
+ArduinoBMA400_Status ArduinoBMA400::startStepCounting()
 {
-    int8_t rslt = 0;
+    int rslt = 0;
     bma400_sensor_conf conf[2];
     struct bma400_int_enable int_en[2];
     memset(conf, 0, sizeof(conf));
@@ -118,9 +113,9 @@ bool ArduinoBMA400::startStepCounting()
     return false;
 }
 
-bool ArduinoBMA400::startAccelerometer()
+ArduinoBMA400_Status ArduinoBMA400::startAccelerometer()
 {
-    uint8_t rslt;
+    int8_t rslt;
     bma400_sensor_conf conf;
     bma400_int_enable int_en;
     conf.type = BMA400_ACCEL;
@@ -135,9 +130,15 @@ bool ArduinoBMA400::startAccelerometer()
     int_en.conf = BMA400_ENABLE;
 
     rslt = bma400_enable_interrupt(&int_en, 1, &this->bma400);
-
+    return false;
 }
 
+/**
+ * @brief Convert the internal accelerometer representation to meters per second squared.
+ * 
+ * This function is from:
+ * https://github.com/BoschSensortec/BMA400-API/blob/13086eb4702d743cac930dbba8a1f3096b0371bc/examples/accelerometer/accelerometer.c
+ */
 #define GRAVITY_EARTH     (9.80665f)
 static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width)
 {
@@ -151,7 +152,7 @@ static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width)
 
 }
 
-u_int32_t ArduinoBMA400::readAccelerometer(double &x, double &y, double &z)
+ArduinoBMA400_Status ArduinoBMA400::readAccelerometer(double &x, double &y, double &z)
 {
     int8_t rslt;
     bma400_sensor_data data;
@@ -164,7 +165,7 @@ u_int32_t ArduinoBMA400::readAccelerometer(double &x, double &y, double &z)
             y = lsb_to_ms2(data.y, 2, 12);
             z = lsb_to_ms2(data.z, 2, 12);
     }
-    
+    return 0;
 }
 
 bool ArduinoBMA400::hasIntStatus(ArduinoBMA400_IntStatus_e status)
@@ -181,8 +182,48 @@ bool ArduinoBMA400::hasIntStatus(ArduinoBMA400_IntStatus_e status)
 
 }
 
-void ArduinoBMA400::countSteps(uint32_t &step_count, uint8_t &activity)
+ArduinoBMA400_Status ArduinoBMA400::countSteps(uint32_t &step_count, uint8_t &activity)
 {
-    bma400_get_steps_counted(&step_count, &activity, &bma400);
+    int8_t rslt = bma400_get_steps_counted(&step_count, &activity, &bma400);
+    return getStatus(rslt);
+}
+
+bool ArduinoBMA400::isError(u_int32_t status)
+{
+    return (status & ArduinoBMA400_Status_ERROR) > 0;
+}
+
+
+ArduinoBMA400_Status ArduinoBMA400::getStatus(int8_t result)
+{
+    ArduinoBMA400_Status ret = ArduinoBMA400_Status_UNKNOWN;
+    switch(result)
+    {
+        case BMA400_OK:
+        {
+            ret = ArduinoBMA400_Status_OK;
+        }break;
+        case BMA400_E_NULL_PTR:
+        {
+            ret = ArduinoBMA400_Status_Null_PTR_ERROR;
+        }break;        
+        case BMA400_E_COM_FAIL:
+        {
+            ret = ArduinoBMA400_Status_Com_Fail_ERROR;
+        }break;        
+        case BMA400_E_DEV_NOT_FOUND:
+        {
+            ret = ArduinoBMA400_Status_Dev_Not_Found_ERROR;
+        }break;        
+        case BMA400_E_INVALID_CONFIG:
+        {
+            ret = ArduinoBMA400_Status_Invalid_Config_ERROR;
+        }break; 
+        default:
+        {
+
+        }      
+    }
+    return ret;
 }
 

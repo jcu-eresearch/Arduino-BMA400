@@ -34,7 +34,12 @@ enum ArduinoBMA400_Status_e
     ArduinoBMA400_Status_OK = 1,
     ArduinoBMA400_Status_ERROR = 0b10,
     ArduinoBMA400_Status_Null_PTR_ERROR = 0b110,
+    ArduinoBMA400_Status_Com_Fail_ERROR = 0b1010,
+    ArduinoBMA400_Status_Dev_Not_Found_ERROR = 0b10010,
+    ArduinoBMA400_Status_Invalid_Config_ERROR = 0b100010,
 };
+
+typedef uint32_t ArduinoBMA400_Status;
 
 enum ArduinoBMA400_IntStatus_e
 {
@@ -61,18 +66,22 @@ private:
     bma400_dev bma400;
     uint8_t address;
     void* interface_ptr;
+    ArduinoBMA400_Status getStatus(int8_t result);
 public:
 
     explicit ArduinoBMA400(SPIClass *spi, PinName CS);
     explicit ArduinoBMA400(TwoWire *i2c, uint8_t address);
 
     void begin();
-    void softReset();
-    void countSteps(uint32_t &step_count, uint8_t &activity);
-    bool startStepCounting();
-    bool startAccelerometer();
-    u_int32_t readAccelerometer(double &x, double &y, double &z);
+    ArduinoBMA400_Status softReset();
+    ArduinoBMA400_Status countSteps(uint32_t &step_count, uint8_t &activity);
+    ArduinoBMA400_Status startStepCounting();
+    ArduinoBMA400_Status startAccelerometer();
+    ArduinoBMA400_Status readAccelerometer(double &x, double &y, double &z);
     bool hasIntStatus(ArduinoBMA400_IntStatus_e status);
+
+    bool isError(u_int32_t);
+
 };
 
 #endif //ARGOSTAG_ARDUINO_BMA400_H
