@@ -3,7 +3,12 @@
 #include "Wire.h"
 #include "Arduino-BMA400.h"
 
-ArduinoBMA400 bma(&Wire, 0x15);
+#ifndef BMA_ADDRESS
+#define BMA_ADDRESS BMA400_I2C_ADDRESS_SDO_HIGH
+#endif
+
+
+ArduinoBMA400 bma(&Wire, BMA_ADDRESS);
 UART *stream = &Serial;
 
 void i2c_scan(HardwareI2C *I2C)
