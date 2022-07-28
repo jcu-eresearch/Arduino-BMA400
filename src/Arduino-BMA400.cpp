@@ -130,7 +130,7 @@ ArduinoBMA400_Status ArduinoBMA400::startAccelerometer()
     int_en.conf = BMA400_ENABLE;
 
     rslt = bma400_enable_interrupt(&int_en, 1, &this->bma400);
-    return false;
+    return rslt;
 }
 
 /**
