@@ -59,6 +59,7 @@ enum ArduinoBMA400_IntStatus_e
     BMA400IntStatus_ACT_CH_Z = BMA400_ASSERTED_ACT_CH_Z 
 };
 
+
 class ArduinoBMA400 {
     friend BMA400_INTF_RET_TYPE bma400_read(uint8_t reg_addr, uint8_t *reg_data, uint32_t length, void *intf_ptr);
     friend BMA400_INTF_RET_TYPE bma400_write(uint8_t reg_addr, const uint8_t *reg_data, uint32_t length, void *intf_ptr);
@@ -82,6 +83,11 @@ public:
 
     bool isError(u_int32_t);
 
+};
+
+namespace ArduinoBMA400_
+{
+    const char* getActivityString(uint8_t activity);
 };
 
 #endif //ARGOSTAG_ARDUINO_BMA400_H

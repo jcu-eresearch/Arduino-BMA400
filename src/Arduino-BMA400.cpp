@@ -22,7 +22,6 @@
 
 #include "Arduino-BMA400.h"
 
-
 ArduinoBMA400::ArduinoBMA400(SPIClass *spi, PinName CS)
 {
     memset(&bma400, 0, sizeof(bma400));
