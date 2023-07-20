@@ -140,7 +140,7 @@ ArduinoBMA400_Status ArduinoBMA400::startAccelerometer()
 
     rslt = bma400_enable_interrupt(&int_en, 1, &this->bma400);
     return rslt;
-}
+};
 
 /**
  * @brief Convert the internal accelerometer representation to meters per second squared.
@@ -159,7 +159,7 @@ static float lsb_to_ms2(int16_t accel_data, uint8_t g_range, uint8_t bit_width)
 
     return accel_ms2;
 
-}
+};
 
 ArduinoBMA400_Status ArduinoBMA400::readAccelerometer(double &x, double &y, double &z)
 {
@@ -175,7 +175,7 @@ ArduinoBMA400_Status ArduinoBMA400::readAccelerometer(double &x, double &y, doub
             z = lsb_to_ms2(data.z, 2, 12);
     }
     return 0;
-}
+};
 
 bool ArduinoBMA400::hasIntStatus(ArduinoBMA400_IntStatus_e status)
 {
@@ -189,18 +189,18 @@ bool ArduinoBMA400::hasIntStatus(ArduinoBMA400_IntStatus_e status)
 
     return status && int_status;
 
-}
+};
 
 ArduinoBMA400_Status ArduinoBMA400::countSteps(uint32_t &step_count, uint8_t &activity)
 {
     int8_t rslt = bma400_get_steps_counted(&step_count, &activity, &bma400);
     return getStatus(rslt);
-}
+};
 
 bool ArduinoBMA400::isError(u_int32_t status)
 {
     return (status & ArduinoBMA400_Status_ERROR) > 0;
-}
+};
 
 
 ArduinoBMA400_Status ArduinoBMA400::getStatus(int8_t result)
@@ -234,5 +234,5 @@ ArduinoBMA400_Status ArduinoBMA400::getStatus(int8_t result)
         }      
     }
     return ret;
-}
+};
 

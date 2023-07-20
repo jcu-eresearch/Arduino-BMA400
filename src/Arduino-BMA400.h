@@ -27,6 +27,8 @@
 #include "Wire.h"
 
 #include "bma400.h"
+#include "bma400_step_counter_config.h"
+
 
 enum ArduinoBMA400_Status_e
 {
@@ -37,6 +39,7 @@ enum ArduinoBMA400_Status_e
     ArduinoBMA400_Status_Com_Fail_ERROR = 0b1010,
     ArduinoBMA400_Status_Dev_Not_Found_ERROR = 0b10010,
     ArduinoBMA400_Status_Invalid_Config_ERROR = 0b100010,
+    ArduinoBMA400_Status_Failed_To_Set_Config_ERROR = 0b1000010,
 };
 
 typedef uint32_t ArduinoBMA400_Status;
