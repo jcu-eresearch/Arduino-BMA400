@@ -22,61 +22,71 @@
 
 #include "Arduino-BMA400.h"
 
-ArduinoBMA400::ArduinoBMA400(SPIClass *spi, PinName CS)
+ArduinoBMA400::ArduinoBMA400(SPIClass *spi, PinName CS, uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE])
 {
     memset(&bma400, 0, sizeof(bma400));
     bma400.intf = BMA400_SPI_INTF;
     this->address = CS;
     interface_ptr = spi;
-}
+    copyStepCounterConfig(new_step_counter_config);
+};
 
-ArduinoBMA400::ArduinoBMA400(TwoWire *i2c, uint8_t address){
+ArduinoBMA400::ArduinoBMA400(TwoWire *i2c, uint8_t address, uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE]){
     memset(&bma400, 0, sizeof(bma400));
     bma400.intf = BMA400_I2C_INTF;
     this->address = address;
     interface_ptr = i2c;
-}
+    copyStepCounterConfig(new_step_counter_config);
+};
+
+void ArduinoBMA400::copyStepCounterConfig(uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE]){
+    for(size_t i = 0; i < BMA_STEP_COUNTER_CONFIG_SIZE; i++)
+    {
+        step_counter_config[i] = new_step_counter_config[i];
+    }
+};
 
 
-void ArduinoBMA400::begin()
+ArduinoBMA400_Status ArduinoBMA400::begin()
 {
     int8_t rslt;
     bma400.intf_ptr = this;
     rslt = bma400_init(&bma400);
     printf("init result: %i\r\n", rslt);
-    // softReset();
+    if(!isError(getStatus(rslt)))
+    {
+        rslt = bma400_set_step_counter_param(step_counter_config, &bma400);
+        if(!isError(getStatus(rslt)))
+        {
+            uint8_t retrieved_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE];
+            rslt = bma400_get_regs(0x59, retrieved_step_counter_config, BMA_STEP_COUNTER_CONFIG_SIZE, &bma400);
+            if(!isError(getStatus(rslt)))
+            {
+                if(memcmp(retrieved_step_counter_config, step_counter_config, BMA_STEP_COUNTER_CONFIG_SIZE) != 0)
+                {
+                    return ArduinoBMA400_Status_Failed_To_Set_Config_ERROR;
+                }
+            }
+        };
 
+    }
+    return getStatus(rslt);
+};
 
-//    bma400.dev_id = ;
-//int8_t rslt;
-//memset(&bma400, 0, sizeof(bma400));
-//bma400.intf_ptr = NULL; /* To attach your interface device reference */
-////bma400.delay_ms = delay_ms;
-//bma400.dev_id = ARGOSTAG_BMA400_ADDR_SEL;
-////bma400.read = i2c_reg_read;
-////bma400.write = i2c_reg_write;
-//bma400.intf = BMA400_I2C_INTF;
-//
-//rslt = bma400_init(&bma);
-//print_rslt(rslt);
-//
-//rslt = bma400_soft_reset(&bma);
-//print_rslt(rslt);
-//
-//step_int.type = BMA400_STEP_COUNTER_INT_EN;
-//step_int.conf = BMA400_ENABLE;
-//
-//rslt = bma400_enable_interrupt(&step_int, 1, &bma);
-//print_rslt(rslt);
-//
-//rslt = bma400_set_power_mode(BMA400_NORMAL_MODE, &bma);
-//print_rslt(rslt);
-}
+uint8_t ArduinoBMA400::getChipID()
+{
+    return bma400.chip_id;
+};
+
+bool ArduinoBMA400::validChipID()
+{
+    return getChipID() == BMA400_CHIP_ID;
+};
 
 ArduinoBMA400_Status ArduinoBMA400::softReset()
 {
     return getStatus(bma400_soft_reset(&bma400));
-}
+};
 
 ArduinoBMA400_Status ArduinoBMA400::startStepCounting()
 {
@@ -110,7 +120,7 @@ ArduinoBMA400_Status ArduinoBMA400::startStepCounting()
 
     rslt = bma400_set_power_mode(BMA400_MODE_NORMAL, &this->bma400);
     return false;
-}
+};
 
 ArduinoBMA400_Status ArduinoBMA400::startAccelerometer()
 {

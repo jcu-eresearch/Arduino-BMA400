@@ -67,13 +67,18 @@ private:
     bma400_dev bma400;
     uint8_t address;
     void* interface_ptr;
+    uint8_t step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE];
     ArduinoBMA400_Status getStatus(int8_t result);
+    void copyStepCounterConfig(uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE]);
+
 public:
 
-    explicit ArduinoBMA400(SPIClass *spi, PinName CS);
-    explicit ArduinoBMA400(TwoWire *i2c, uint8_t address);
+    explicit ArduinoBMA400(SPIClass *spi, PinName CS, uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE]=bma400_step_counter_config_wrist);
+    explicit ArduinoBMA400(TwoWire *i2c, uint8_t address, uint8_t new_step_counter_config[BMA_STEP_COUNTER_CONFIG_SIZE]=bma400_step_counter_config_wrist);
 
-    void begin();
+    ArduinoBMA400_Status begin();
+    uint8_t getChipID();
+    bool validChipID();
     ArduinoBMA400_Status softReset();
     ArduinoBMA400_Status countSteps(uint32_t &step_count, uint8_t &activity);
     ArduinoBMA400_Status startStepCounting();
